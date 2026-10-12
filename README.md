@@ -34,8 +34,6 @@ Obsidian Local REST API MCP endpoint
 
 Microsoft's current documentation says Copilot Studio supports **Streamable HTTP** MCP transport and no longer supports legacy SSE transport after August 2025. Confirm that the installed V1.1 extension and Local REST API expose a Copilot Studio-compatible Streamable HTTP endpoint, normally ending in `/mcp`. If initialization fails despite correct authentication, transport compatibility is the first item to check.
 
-Also, the required Obsidian search plugin is **Omnisearch**, not the unrelated desktop downloader named **OmniGet**. If “Omniget” in your checklist was intended to mean Omnisearch, install **Omnisearch**. The V1.1 integrator repository lists Omnisearch and Local REST API as its dependencies.
-
 ---
 
 ## 1. Apply for the GitHub Student Developer Pack
@@ -119,6 +117,62 @@ Settings > Community plugins
 ```
 
 9. Confirm the MCP feature/endpoint is enabled in the Local REST API settings if the installed version provides a separate toggle.
+
+### 4.1.1 Optional: use the same custom API key on multiple computers
+
+This optional setup lets the existing Copilot Studio MCP connection continue using the same `Authorization` value when you move the same agent and public hostname between computers. It avoids replacing the API key in the Copilot Studio connection each time.
+
+> **Important:** the API key alone does not move the Cloudflare route. Each computer must also run the same Cloudflare Tunnel configuration for the same public hostname. For a simple switching workflow, keep only one computer's Obsidian origin and tunnel connector active at a time. If multiple computers connect to the same tunnel simultaneously, requests can reach different origins. Only do that when every computer has an intentionally synchronized vault and identical plugin configuration.
+
+1. Generate a strong random secret in a password manager. Use at least 32 random characters. For example:
+
+```text
+REPLACE-WITH-A-UNIQUE-RANDOM-SECRET-OF-32-OR-MORE-CHARACTERS
+```
+
+2. On the first computer, open:
+
+```text
+Obsidian > Settings > Local REST API
+```
+
+3. Locate the API-key field or the advanced setting that allows a custom API key. Replace the generated key with your chosen secret, then save or restart the plugin if requested. The exact label can vary by plugin version.
+4. Repeat the same setting on every computer that will host the vault endpoint.
+5. Install the same named Cloudflare Tunnel connector on each computer and use the same hostname and local service settings:
+
+```text
+Public MCP URL: https://obsidian-mcp.example.me/mcp
+Local origin:    https://localhost:27124
+API key:         the same custom secret on every computer
+```
+
+6. In Copilot Studio, configure the MCP connection once with:
+
+```text
+Header name:  Authorization
+Header value: Bearer YOUR_SHARED_CUSTOM_API_KEY
+```
+
+7. When changing computers:
+
+```text
+1. Close Obsidian or stop cloudflared on the old computer.
+2. Start Obsidian on the new computer.
+3. Confirm Local REST API, Omnisearch, and the V1.1 integrator are enabled.
+4. Start or verify cloudflared on the new computer.
+5. Test the public /mcp endpoint.
+6. Ask the existing agent to check the MCP connection.
+```
+
+Security requirements:
+
+- Store the shared key in a password manager, not in the vault or a synced configuration note.
+- Do not commit the key, tunnel token, plugin data file, or Copilot connection export to GitHub.
+- Use a unique key that is not reused for any other service.
+- Rotate the key on every computer and in Copilot Studio if any one computer is lost or compromised.
+- A shared key increases the impact of one device compromise. Separate keys and connections are safer when seamless computer switching is not required.
+
+The Local REST API MCP endpoint requires a bearer token in the `Authorization` header. See the project's current MCP client documentation for the authentication format.
 
 ### 4.2 Install Omnisearch
 
@@ -360,6 +414,107 @@ The labels can vary slightly by tenant and rollout.
 6. Select the **...** menu in the upper-right corner.
 7. Select **Copy to Copilot Studio**.
 8. Wait for the copied agent to open in Copilot Studio.
+
+### Recommended agent model selection
+
+On the agent's **Overview** page, open the **Model** selector and choose the primary model before final testing.
+
+#### Recommended model: GPT 6 Sol
+
+For this Obsidian MCP agent, select **GPT 6 Sol** when it is available in your Copilot Studio environment. The agent's main workload combines fast vault retrieval with dependable append and update operations. Sol provides the best balance for that workload: fast search, excellent append reliability, and strong overall tool-use suitability.
+
+```text
+Primary recommendation:       GPT 6 Sol
+Complex research and editing: GPT 6 Astra
+Strong general alternative:   Claude Sonnet 5.5
+Substantial synthesis:        Claude Opus 5.5
+Search-first configuration:   GPT 6 Luna
+Legacy/general fallback:      GPT 5.5 Chat
+```
+
+#### Model comparison for this Obsidian agent
+
+| Model | Search speed | Append reliability | Overall suitability |
+|---|---|---|---|
+| **GPT 6 Sol** | Fast | **Excellent** | **Best overall** |
+| **GPT 6 Astra** | Slower | Excellent | Best for complicated research and editing |
+| **Claude Sonnet 5.5** | Fast | Very good | Strong alternative |
+| **Claude Opus 5.5** | Slow | Excellent | Good for substantial synthesis before writing |
+| **GPT 6 Luna** | **Fastest** | Good for tightly constrained writes | Better as search-only |
+| **GPT 5.5 Chat** | Fast | Good | Usable, but less attractive than Sol |
+
+#### Why GPT 6 Sol is the default recommendation
+
+Choose **GPT 6 Sol** for the standard agent because the same agent must do more than retrieve results. It must reliably select the correct MCP tool, preserve the target file path, append content without overwriting unrelated material, and verify the result afterward. Sol's excellent append reliability makes it preferable to Luna even though Luna is faster for search-only requests.
+
+Typical Sol workloads include:
+
+```text
+Search the vault and return ranked results
+Open the selected note
+Append content under a specified heading
+Create a new note at an exact vault-relative path
+Update frontmatter or a constrained section
+Read the changed note back for verification
+```
+
+#### When to select GPT 6 Astra
+
+Use **GPT 6 Astra** when the agent must conduct complicated research before editing, such as synthesizing many notes, reconciling conflicting sources, planning a substantial restructuring, or carrying out a long sequence of dependent tool calls. Astra has excellent append reliability, but its slower search speed makes it less suitable as the everyday default.
+
+#### When to select GPT 6 Luna
+
+Use **GPT 6 Luna** for an agent dedicated primarily to search and retrieval. It is the fastest option in this comparison, but its writing behavior is better suited to tightly constrained changes. It should not be the default when users regularly ask the agent to append, revise, or reorganize notes.
+
+For a Luna-based search agent, keep the instructions read-only where possible:
+
+```text
+Search, list, and read vault content. Do not create, modify, move, rename, or delete files unless the user explicitly switches to a write-enabled agent.
+```
+
+#### When to select a Claude model
+
+Use **Claude Sonnet 5.5** as a strong alternative when you want fast search with very good append reliability. Use **Claude Opus 5.5** when substantial synthesis and careful planning matter more than response speed. Confirm that the tenant allows the selected model and that its data-processing requirements are acceptable before publication.
+
+#### GPT 5.5 Chat as a fallback
+
+**GPT 5.5 Chat** remains usable for fast, straightforward MCP operations, but it is less attractive than Sol for an agent that combines search with frequent file appends. Use it when the preferred models are not available in the target Copilot Studio environment.
+
+#### Verify model availability in the target environment
+
+Only select models that actually appear in the Copilot Studio agent's **Model** menu. Availability can differ by tenant, region, environment, licensing, rollout stage, and administrator policy. If **GPT 6 Sol** is unavailable, use the highest-ranked available production model from the comparison above.
+
+#### Required model test
+
+Run the same test at least five times with each available candidate. The test should include both retrieval and a controlled append because search-only testing does not measure the most important difference between Sol and Luna.
+
+First run the read-only test:
+
+```text
+Check the MCP connection. Call the Obsidian MCP server and search the vault for "Directive". Return up to 10 results with vault-relative paths. Do not modify any file.
+```
+
+Then run a controlled append test against a disposable note:
+
+```text
+Open Copilot-Tests/Model-Append-Test.md. Append a new bullet under the heading "Test Results" containing the current date, model name, and the words "append test succeeded". Preserve all existing content and formatting. Read the changed section back to me after writing. Do not modify any other file.
+```
+
+Record these measurements:
+
+```text
+Time until the first MCP tool call
+Successful MCP calls out of five attempts
+Correct selection of the Omnisearch tool
+Correct target path selection
+Append success without overwriting existing content
+Correct placement under the requested heading
+Successful read-after-write verification
+Number of unnecessary tool calls
+Total response time
+```
+
+Keep **GPT 6 Sol** as the default unless testing in the actual tenant shows that another available model is both faster and at least as reliable for append operations. End-to-end testing is more relevant than a general model benchmark because performance also depends on Copilot Studio orchestration, the Cloudflare route, Local REST API, the V1.1 integration, vault size, and tool descriptions.
 
 Prerequisites:
 
@@ -655,6 +810,7 @@ Published updates might not appear in a conversation that was already open.
 - [ ] Namecheap domain claimed and renewal settings reviewed.
 - [ ] Domain nameservers changed to Cloudflare and zone is Active.
 - [ ] Local REST API installed, enabled, and authenticated.
+- [ ] Optional multi-computer setup uses the same custom API key and controlled tunnel handoff.
 - [ ] Omnisearch installed, enabled, and indexed.
 - [ ] Obsidian Omnisearch LocalREST Integrator V1.1 installed and enabled.
 - [ ] Local MCP initialize test returns HTTP 200.
@@ -662,6 +818,7 @@ Published updates might not appear in a conversation that was already open.
 - [ ] Public hostname routes to the Local REST API HTTPS port.
 - [ ] Public MCP initialize test returns HTTP 200.
 - [ ] Agent created in Microsoft 365 Copilot Chat and copied to Copilot Studio.
+- [ ] Primary agent model selected and tested for tool-call speed and reliability.
 - [ ] MCP server added under Tools with an API-key connection.
 - [ ] V1.1 `prompt.txt` copied into agent instructions.
 - [ ] Expected vault and Omnisearch tools appear.

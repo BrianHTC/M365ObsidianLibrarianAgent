@@ -1,6 +1,6 @@
 # Let Microsoft 365 Copilot Chat Manage an Obsidian Vault
 
-> **Scope:** This guide connects a local Obsidian vault to a Microsoft 365 Copilot agent through Obsidian Local REST API, Omnisearch, the Obsidian Omnisearch LocalREST Integrator V1.1, and a Cloudflare Tunnel.
+> **Scope:** This guide connects a local Obsidian vault to a Microsoft 365 Copilot agent through Obsidian Local REST API, Omnisearch, the latest release of Obsidian Omnisearch LocalREST Integrator, and a Cloudflare Tunnel.
 >
 > **Security warning:** This design exposes a local API through a public hostname. Keep Local REST API authentication enabled, never publish the API key, restrict who can use the agent, and treat write/delete tools as privileged operations. Back up the vault before allowing an agent to modify files.
 
@@ -24,7 +24,7 @@ Obsidian Local REST API MCP endpoint
         |
         +--> Vault file tools
         |
-        +--> Omnisearch LocalREST Integrator V1.1
+        +--> latest Omnisearch LocalREST Integrator release
                   |
                   v
              Omnisearch index
@@ -32,7 +32,7 @@ Obsidian Local REST API MCP endpoint
 
 ## Important compatibility note
 
-Microsoft's current documentation says Copilot Studio supports **Streamable HTTP** MCP transport and no longer supports legacy SSE transport after August 2025. Confirm that the installed V1.1 extension and Local REST API expose a Copilot Studio-compatible Streamable HTTP endpoint, normally ending in `/mcp`. If initialization fails despite correct authentication, transport compatibility is the first item to check.
+Microsoft's current documentation says Copilot Studio supports **Streamable HTTP** MCP transport and no longer supports legacy SSE transport after August 2025. Confirm that the installed latest-release extension and Local REST API expose a Copilot Studio-compatible Streamable HTTP endpoint, normally ending in `/mcp`. If initialization fails despite correct authentication, transport compatibility is the first item to check.
 
 ---
 
@@ -158,7 +158,7 @@ Header value: Bearer YOUR_SHARED_CUSTOM_API_KEY
 ```text
 1. Close Obsidian or stop cloudflared on the old computer.
 2. Start Obsidian on the new computer.
-3. Confirm Local REST API, Omnisearch, and the V1.1 integrator are enabled.
+3. Confirm Local REST API, Omnisearch, and the latest integrator release are enabled.
 4. Start or verify cloudflared on the new computer.
 5. Test the public /mcp endpoint.
 6. Ask the existing agent to check the MCP connection.
@@ -183,11 +183,11 @@ The Local REST API MCP endpoint requires a bearer token in the `Authorization` h
 
 If you need PDF or Office-document contents indexed, install and configure the text-extraction dependency recommended by Omnisearch, then rebuild or refresh the index.
 
-### 4.3 Install Obsidian Omnisearch LocalREST Integrator V1.1
+### 4.3 Install the latest Obsidian Omnisearch LocalREST Integrator release
 
-Download V1.1 from:
+Download the latest published release from:
 
-- [Obsidian Omnisearch LocalREST Integrator V1.1 release](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/tag/V1.1)
+- [Latest Obsidian Omnisearch LocalREST Integrator release](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/latest)
 - [Project repository](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator)
 
 Create this folder inside the target vault:
@@ -196,7 +196,7 @@ Create this folder inside the target vault:
 YOUR-VAULT\.obsidian\plugins\omnisearch-mcp\
 ```
 
-Place the V1.1 release files directly in that folder. The expected structure is:
+Place the latest release files directly in that folder. The expected structure is:
 
 ```text
 YOUR-VAULT/
@@ -231,7 +231,7 @@ Confirm that these plugins are enabled:
 ```text
 Local REST API
 Omnisearch
-Omnisearch MCP / Obsidian Omnisearch LocalREST Integrator V1.1
+Omnisearch MCP / Obsidian latest Omnisearch LocalREST Integrator release
 ```
 
 Keep Obsidian running during all connection tests. If Obsidian is closed, the local API origin is unavailable and Cloudflare commonly returns `502 Bad Gateway`.
@@ -514,7 +514,7 @@ Number of unnecessary tool calls
 Total response time
 ```
 
-Keep **GPT 6 Sol** as the default unless testing in the actual tenant shows that another available model is both faster and at least as reliable for append operations. End-to-end testing is more relevant than a general model benchmark because performance also depends on Copilot Studio orchestration, the Cloudflare route, Local REST API, the V1.1 integration, vault size, and tool descriptions.
+Keep **GPT 6 Sol** as the default unless testing in the actual tenant shows that another available model is both faster and at least as reliable for append operations. End-to-end testing is more relevant than a general model benchmark because performance also depends on Copilot Studio orchestration, the Cloudflare route, Local REST API, the latest integrator release, vault size, and tool descriptions.
 
 Prerequisites:
 
@@ -563,9 +563,9 @@ Then:
 3. Supply the API-key value when prompted.
 4. Select **Add to agent**.
 
-### Use the V1.1 `prompt.txt` as the agent instructions
+### Use `prompt.txt` from the latest release as the agent instructions
 
-1. Download `prompt.txt` from the [V1.1 release](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/tag/V1.1).
+1. Download `prompt.txt` from the [latest release](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/latest).
 2. Open it locally.
 3. Copy its complete contents.
 4. In Copilot Studio, open the agent's **Instructions** section.
@@ -584,7 +584,7 @@ At minimum, verify both categories:
 
 ```text
 Vault-management tools from Local REST API
-Omnisearch tool supplied by the V1.1 integrator, such as omnisearch_search
+Omnisearch tool supplied by the latest integrator release, such as omnisearch_search
 ```
 
 The exact Local REST API tool names can vary by installed version. Confirm that the list includes the operations you intend to permit, for example:
@@ -594,7 +594,7 @@ List vault files or folders
 Read/open a file
 Create or update a note
 Search through Omnisearch
-Open or navigate to a selected result, if provided by V1.1
+Open or navigate to a selected result, if provided by the installed latest release
 ```
 
 If tools are missing:
@@ -757,7 +757,7 @@ Also confirm MCP is enabled in Local REST API and that the installed version use
 ```text
 Confirm Local REST API is enabled
 Confirm Omnisearch is enabled
-Confirm Omnisearch MCP V1.1 is enabled
+Confirm the latest Omnisearch MCP release is enabled
 Reload Obsidian with Ctrl+R
 Wait for Omnisearch indexing to finish
 Retest the endpoint
@@ -797,7 +797,7 @@ Published updates might not appear in a conversation that was already open.
 - [ ] Limit the agent to your account or an explicit test group before broader publication.
 - [ ] Review every write/delete tool before publishing.
 - [ ] Prefer read-only prompts during connection testing.
-- [ ] Keep Obsidian, Local REST API, Omnisearch, the V1.1 integrator, and cloudflared updated.
+- [ ] Keep Obsidian, Local REST API, Omnisearch, the latest integrator release, and cloudflared updated.
 - [ ] Re-test tools after any plugin, tunnel, authentication, or agent update.
 - [ ] Rotate the Local REST API key immediately if it is exposed.
 - [ ] Stop or disable the tunnel when remote access is not needed.
@@ -812,7 +812,7 @@ Published updates might not appear in a conversation that was already open.
 - [ ] Local REST API installed, enabled, and authenticated.
 - [ ] Optional multi-computer setup uses the same custom API key and controlled tunnel handoff.
 - [ ] Omnisearch installed, enabled, and indexed.
-- [ ] Obsidian Omnisearch LocalREST Integrator V1.1 installed and enabled.
+- [ ] Obsidian latest Omnisearch LocalREST Integrator release installed and enabled.
 - [ ] Local MCP initialize test returns HTTP 200.
 - [ ] Cloudflare Tunnel installed as a service and Healthy.
 - [ ] Public hostname routes to the Local REST API HTTPS port.
@@ -820,7 +820,7 @@ Published updates might not appear in a conversation that was already open.
 - [ ] Agent created in Microsoft 365 Copilot Chat and copied to Copilot Studio.
 - [ ] Primary agent model selected and tested for tool-call speed and reliability.
 - [ ] MCP server added under Tools with an API-key connection.
-- [ ] V1.1 `prompt.txt` copied into agent instructions.
+- [ ] latest-release `prompt.txt` copied into agent instructions.
 - [ ] Expected vault and Omnisearch tools appear.
 - [ ] Read-only Copilot Studio test succeeds.
 - [ ] Teams + Microsoft 365 channel enabled.
@@ -839,7 +839,7 @@ Published updates might not appear in a conversation that was already open.
 - [Obsidian Local REST API documentation](https://coddingtonbear.github.io/obsidian-local-rest-api/)
 - [Omnisearch](https://github.com/scambier/obsidian-omnisearch)
 - [Obsidian Omnisearch LocalREST Integrator](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator)
-- [V1.1 release and prompt.txt](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/tag/V1.1)
+- [Latest release and prompt.txt](https://github.com/BrianHTC/Obsidian-Omnisearch-Localrest-Integrator/releases/latest)
 - [Microsoft: Connect an agent to an existing MCP server](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-add-existing-server-to-agent)
 - [Microsoft: Connect and configure an agent for Teams and Microsoft 365](https://learn.microsoft.com/en-us/microsoft-copilot-studio/publication-add-bot-to-microsoft-teams)
 
